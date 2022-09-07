@@ -3,21 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "npx next dev",
+    "build": "npx next build",
+    "start": "npx next start",
+    "lint": "npx next lint"
   },
   "dependencies": {
-    "@trpc/client": "^9.27.2",
-    "@trpc/next": "^9.27.2",
-    "@trpc/react": "^9.27.2",
-    "@trpc/server": "^9.27.2",
     "next": "12.2.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-query": "^3.39.2",
-    "superjson": "^1.9.1",
     "zod": "^3.17.3"
   },
   "devDependencies": {

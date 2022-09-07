@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -36,25 +35,8 @@ func main() {
 	apps, err := getAllApps()
 	check(err)
 	apps = format(apps)
-	fmt.Println(lookFor("apex", apps))
-	// err = save(appsMap)
-	// check(err)
-}
-
-func lookFor(key string, apps []App) []App {
-	var ret []App
-
-	if key == "" || len(key) <= 2 {
-		return ret
-	}
-
-	for _, app := range apps {
-		if strings.Contains(app.Name, key) {
-			ret = append(ret, app)
-		}
-	}
-
-	return ret
+	err = save(apps)
+	check(err)
 }
 
 func save(apps []App) error {
