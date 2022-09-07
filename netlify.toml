@@ -1,0 +1,10 @@
+[functions]
+  directory="functions"
+
+[build]
+  command="make build"
+  publish="public"
+  functions="functions"
+
+[build.environment]
+  GO_VERSION="1.19"
