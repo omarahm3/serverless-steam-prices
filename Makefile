@@ -1,11 +1,11 @@
 .PHONY: build clean deploy gomodgen dev
 
 build-frontend:
-	cd ./frontend && yarn build
+	cd ./frontend && yarn && yarn build && cd ..
 
 build-functions:
 	export GO111MODULE=on
-	cd ./functions/get/ && env CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o ../../bin/get get.go && cd ..
+	cd ./functions/get/ && env CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o ../../bin/get get.go && cd ../..
 
 build: build-frontend build-functions
 
