@@ -3,24 +3,41 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-const ALL_APPS = "http://api.steampowered.com/ISteamApps/GetAppList/v0002/?key=STEAMKEY&format=json"
+const (
+	ALL_APPS    = "http://api.steampowered.com/ISteamApps/GetAppList/v0002/?key=STEAMKEY&format=json"
+	APP_DETAILS = "https://store.steampowered.com/api/appdetails?appids="
+	MAX_APPS    = 5
+)
 
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
 
 type Json map[string]interface{}
 
+type AppDetails struct {
+	IsFree        bool   `json:"is_free"`
+	HeaderImage   string `json:"header_image"`
+	PriceOverview struct {
+		PriceFormatted string `json:"final_formatted"`
+	} `json:"price_overview"`
+}
+
 type App struct {
-	Appid int    `json:"appid"`
-	Name  string `json:"name"`
+	Appid  int    `json:"appid"`
+	Name   string `json:"name"`
+	Price  string `json:"price"`
+	Image  string `json:"image"`
+	IsFree bool   `json:"free"`
 }
 
 type AppList struct {
@@ -55,7 +72,11 @@ func Handler(r Request) (Response, error) {
 	}
 
 	apps = format(apps)
-	found := lookFor(query, apps)
+
+	found, err := lookFor(query, apps)
+	if err != nil {
+		return response(Json{"message": "error occurred while getting app details"}, 400)
+	}
 
 	return response(Json{
 		"total": len(found),
@@ -67,20 +88,33 @@ func main() {
 	lambda.Start(Handler)
 }
 
-func lookFor(key string, apps []App) []App {
+func lookFor(key string, apps []App) ([]App, error) {
 	var ret []App
 
 	if key == "" || len(key) <= 2 {
-		return ret
+		return ret, nil
 	}
 
 	for _, app := range apps {
+		if len(ret) > MAX_APPS {
+			return ret, nil
+		}
+
 		if strings.Contains(app.Name, key) {
+			details, err := getAppDetails(app.Appid)
+			if err != nil {
+				return nil, err
+			}
+
+			app.Price = details.PriceOverview.PriceFormatted
+			app.Image = details.HeaderImage
+			app.IsFree = details.IsFree
+
 			ret = append(ret, app)
 		}
 	}
 
-	return ret
+	return ret, nil
 }
 
 func format(apps []App) []App {
@@ -98,6 +132,33 @@ func format(apps []App) []App {
 	}
 
 	return ret
+}
+
+// TODO apply a cache over this function for sure
+func getAppDetails(appid int) (*AppDetails, error) {
+	body, err := request(fmt.Sprintf("%s%d", APP_DETAILS, appid))
+	if err != nil {
+		return nil, err
+	}
+
+	var data map[string]map[string]interface{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := json.Marshal(data[strconv.Itoa(appid)]["data"])
+	if err != nil {
+		return nil, err
+	}
+
+	details := AppDetails{}
+	err = json.Unmarshal(info, &details)
+	if err != nil {
+		return nil, err
+	}
+
+	return &details, nil
 }
 
 func getAllApps() ([]App, error) {
@@ -123,6 +184,21 @@ func getAllApps() ([]App, error) {
 
 func cleanString(s string) string {
 	return strings.Join(strings.Fields(strings.ToLower(strings.TrimSpace(nonAlphanumericRegex.ReplaceAllString(s, "")))), " ")
+}
+
+func request(url string) ([]byte, error) {
+	r, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
 func response(body Json, status int) (Response, error) {

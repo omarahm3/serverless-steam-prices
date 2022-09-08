@@ -1,10 +1,10 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import Image from 'next/image';
 import { ChangeEvent, useState } from 'react';
 
 type CardProps = {
-  name: string;
-  price: number;
+  app: App;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API;
@@ -14,6 +14,8 @@ interface App {
   appid: string;
   name: string;
   price: number;
+  free: boolean;
+  image: string;
 }
 
 interface Response {
@@ -23,15 +25,17 @@ interface Response {
 
 const Home: NextPage = () => {
   const [tid, setTid] = useState<NodeJS.Timeout | undefined>(undefined);
+  const [error, setError] = useState<undefined | string>(undefined);
   const [apps, setApps] = useState<Array<App>>([]);
 
   const request = async (query: string): Promise<Response> => {
     const response = await fetch(`${API_URL}?query=${query}`);
-    return await response.json() as Response;
+    return (await response.json()) as Response;
   };
 
   const search = (e: ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
+    setError(undefined);
     const query = e.target.value;
     clearTimeout(tid);
 
@@ -40,17 +44,29 @@ const Home: NextPage = () => {
     }
 
     const id = setTimeout(async () => {
-      console.log('Making the request with query:', query);
-      const res = await request(query);
-      if (res.total === 0) {
-        return;
-      }
+      try {
+        const res = await request(query);
 
-      setApps(res.apps);
+        if (res.total === 0) {
+          return;
+        }
+
+        setApps(res.apps);
+      } catch (err) {
+        setError(
+          'Something happened while retrieving list of games, probably it is because the list is too big? try to narrow down the results please'
+        );
+      }
     }, IDLE_TIME);
 
     setTid(id);
   };
+
+  const renderApps = () => (
+    <div className="grid gap-3 pt-3 pb-5 mt-3 text-center md:grid-cols-3 lg:w-2/3 overflow-y-auto">
+      {apps.length ? apps.map(app => <Card key={app.appid} app={app} />) : ''}
+    </div>
+  );
 
   return (
     <>
@@ -65,28 +81,34 @@ const Home: NextPage = () => {
           The unofficial <span className="text-blue-600">Steam</span> DB
         </h1>
 
-        <div className="grid gap-3 pt-3 mt-3 text-center md:grid-cols-3 lg:w-2/3">
-          <div className="col-span-3">
-            <input
-              type="text"
-              placeholder="Apex Legends"
-              className="mt-1 focus:ring-indigo-500 py-2 px-3 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border border-gray-500 rounded-md"
-              onChange={search}
-            />
-            <small>Make sure to enter more than 2 characters huh!</small>
-          </div>
-          {apps.length ? apps.map(app => <Card key={app.appid} name={app.name} price={app.price} />) : ''}
+        <div className="text-center w-full lg:w-2/3">
+          <input
+            type="text"
+            placeholder="Apex Legends"
+            className="mt-1 focus:ring-indigo-500 py-2 px-3 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border border-gray-500 rounded-md"
+            onChange={search}
+          />
+          <p className="text-xs pt-1">- Make sure to enter more than 2 characters huh!</p>
+          <p className="text-xs pt-1">- API will return a max of 5 results only</p>
         </div>
+        {error ? <p className="text-red-900 font-bold text-sm">{error}</p> : renderApps()}
       </main>
     </>
   );
 };
 
-const Card = ({ name, price }: CardProps) => {
+const Card = ({ app }: CardProps) => {
   return (
-    <section className="flex flex-col justify-center p-6 duration-500 border-2 border-gray-500 rounded shadow-xl motion-safe:hover:scale-105">
-      <h2 className="text-lg text-gray-700">{name}</h2>
-      <p className="text-sm text-gray-600">{price}</p>
+    <section className="flex flex-col justify-center p-6 m-6 duration-500 border-2 border-gray-500 rounded shadow-xl motion-safe:hover:scale-105">
+      {app.image && app.image !== '' && (
+        <Image alt={app.appid} src={app.image} layout="responsive" width="100" height="50" />
+      )}
+      <h2 className="text-lg text-gray-700">{app.name}</h2>
+      {app.free ? (
+        <p className="text-sm text-green-600 font-bold">Free</p>
+      ) : (
+        <p className="text-sm text-blue-600 font-bold">{app.price}</p>
+      )}
     </section>
   );
 };
