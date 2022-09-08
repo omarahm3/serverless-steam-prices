@@ -17,7 +17,7 @@ import (
 const (
 	ALL_APPS    = "http://api.steampowered.com/ISteamApps/GetAppList/v0002/?format=json"
 	APP_DETAILS = "https://store.steampowered.com/api/appdetails?appids="
-	MAX_APPS    = 5
+	MAX_APPS    = 6
 )
 
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
@@ -96,7 +96,7 @@ func lookFor(key string, apps []App) ([]App, error) {
 	}
 
 	for _, app := range apps {
-		if len(ret) > MAX_APPS {
+		if len(ret) == MAX_APPS {
 			return ret, nil
 		}
 

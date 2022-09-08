@@ -87,9 +87,11 @@ const Home: NextPage = () => {
             placeholder="Apex Legends"
             className="mt-1 focus:ring-indigo-500 py-2 px-3 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border border-gray-500 rounded-md"
             onChange={search}
+            onFocus={(e) => e.currentTarget.select()}
+            autoFocus
           />
           <p className="text-xs pt-1">- Make sure to enter more than 2 characters huh!</p>
-          <p className="text-xs pt-1">- API will return a max of 5 results only</p>
+          <p className="text-xs pt-1">- API will return a max of 6 results only</p>
         </div>
         {error ? <p className="text-red-900 font-bold text-sm">{error}</p> : renderApps()}
       </main>
