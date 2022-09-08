@@ -49,9 +49,8 @@ func main() {
 	check(err)
 	apps, err = format(apps)
 	check(err)
-	// err = save(apps)
-	// check(err)
-	fmt.Println(apps)
+	err = save(apps)
+	check(err)
 }
 
 func save(apps []App) error {

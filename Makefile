@@ -12,7 +12,7 @@ build: build-frontend build-functions
 clean:
 	rm -rf ./bin ./vendor go.sum
 
-deploy: clean build
+deploy: clean build-functions
 	sls deploy --verbose
 
 dev: build

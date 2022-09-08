@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	ALL_APPS    = "http://api.steampowered.com/ISteamApps/GetAppList/v0002/?key=STEAMKEY&format=json"
+	ALL_APPS    = "http://api.steampowered.com/ISteamApps/GetAppList/v0002/?format=json"
 	APP_DETAILS = "https://store.steampowered.com/api/appdetails?appids="
 	MAX_APPS    = 5
 )
