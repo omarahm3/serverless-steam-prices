@@ -73,23 +73,24 @@ func save(apps []App) error {
 }
 
 func format(apps []App) ([]App, error) {
-	ret := make([]App, len(apps))
+	var ret []App
+
 	for _, app := range apps {
 		appName := cleanString(app.Name)
-		if appName == "" {
+		if appName == "" || app.Appid == 0 {
 			continue
 		}
 
-		details, err := getAppDetails(app.Appid)
-		if err != nil {
-			return nil, err
-		}
+		// details, err := getAppDetails(app.Appid)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
 		ret = append(ret, App{
 			Name:  appName,
 			Appid: app.Appid,
-			Price: details.PriceOverview.PriceFormatted,
-			Image: details.HeaderImage,
+			// Price: details.PriceOverview.PriceFormatted,
+			// Image: details.HeaderImage,
 		})
 	}
 
