@@ -1,6 +1,14 @@
 {
+  "scripts": {
+    "dev": "sls offline start",
+    "watch": "nodemon --watch ./ -e go,js --exec make build-functions",
+    "deploy": "sls deploy -c serverless.prod.yml --verbose",
+    "destroy": "sls remove -c serverless.prod.yml --verbose",
+    "seed": "rm -f ./seed/*.json && go run ./scripts/generate-seed-data.go"
+  },
   "devDependencies": {
     "serverless-dynamodb-local": "^0.2.40",
+    "serverless-dynamodb-seed": "^0.3.0",
     "serverless-offline": "^10.0.2"
   }
 }

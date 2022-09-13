@@ -24,7 +24,7 @@ type gameDetails struct {
 	} `json:"price_overview"`
 }
 
-type game struct {
+type Game struct {
 	Appid  int    `json:"appid"`
 	Name   string `json:"name"`
 	Price  string `json:"price"`
@@ -33,14 +33,14 @@ type game struct {
 }
 
 type gameList struct {
-	Apps []game `json:"apps"`
+	Apps []Game `json:"apps"`
 }
 
 type games struct {
 	Applist gameList `json:"applist"`
 }
 
-func GetAllGames() ([]game, error) {
+func GetAllGames() ([]Game, error) {
 	r, err := http.Get(all_apps)
 	if err != nil {
 		return nil, err
@@ -61,15 +61,15 @@ func GetAllGames() ([]game, error) {
 	return apps.Applist.Apps, nil
 }
 
-func Format(apps []game) []game {
-	ret := make([]game, len(apps))
+func Format(apps []Game) []Game {
+	var ret []Game
 	for _, app := range apps {
 		appName := cleanString(app.Name)
-		if appName == "" {
+		if appName == "" || app.Appid == 0 {
 			continue
 		}
 
-		ret = append(ret, game{
+		ret = append(ret, Game{
 			Name:  appName,
 			Appid: app.Appid,
 		})
@@ -78,8 +78,8 @@ func Format(apps []game) []game {
 	return ret
 }
 
-func LookFor(key string, apps []game) ([]game, error) {
-	var ret []game
+func LookFor(key string, apps []Game) ([]Game, error) {
+	var ret []Game
 
 	if key == "" || len(key) <= 2 {
 		return ret, nil
