@@ -1,0 +1,59 @@
+service: steamapp-details
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: eu-central-1
+  environment:
+    TABLE_NAME: apps-${opt:stage, sls:stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:*:*:*"
+
+plugins:
+  - serverless-dynamodb-seed
+
+custom:
+  seed:
+    apps:
+      table: apps-${opt:stage, sls:stage}
+      sources: 
+        - ./seed/apps.json
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+functions:
+  appDetails:
+    handler: ./bin/get
+    events:
+      - http:
+          path: apps
+          method: get
+
+resources:
+  Resources:
+    SteamAppsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: 'apps-${opt:stage, sls:stage}'
+        AttributeDefinitions:
+          - AttributeName: appid
+            AttributeType: N
+        KeySchema:
+          - AttributeName: appid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
