@@ -58,21 +58,23 @@ func (h *Handler) GetAppDetails() (Response, error) {
 		return JSONResponse(http.StatusNotFound, Json{"message": "query must be more than 2 characters"})
 	}
 
-	apps, err := app.GetAllGames()
+	apps, err := app.GetAllAppsByName(query, h.tableName, h.client)
 	if err != nil {
-		return JSONResponse(http.StatusBadGateway, Json{"message": "error occurred while retrieving steam apps"})
+		return JSONResponse(http.StatusBadGateway, Json{"message": fmt.Sprintf("error getting apps with this query: [%s]", query)})
 	}
 
-	apps = app.Format(apps)
+	if len(apps) == 0 {
+		return JSONResponse(http.StatusOK, Json{"message": fmt.Sprintf("no games were found using this query: [%s]", query)})
+	}
 
-	found, err := app.LookFor(query, apps)
+	games, err := app.GetAllAppsDetails(apps)
 	if err != nil {
 		return JSONResponse(http.StatusBadGateway, Json{"message": "error occurred while getting app details"})
 	}
 
-	return JSONResponse(http.StatusBadGateway, Json{
-		"total": len(found),
-		"apps":  found,
+	return JSONResponse(http.StatusOK, Json{
+		"total": len(games),
+		"apps":  games,
 	})
 }
 

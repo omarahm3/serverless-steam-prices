@@ -8,6 +8,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
 const (
@@ -107,6 +111,25 @@ func LookFor(key string, apps []Game) ([]Game, error) {
 	return ret, nil
 }
 
+func GetAllAppsDetails(apps []Game) ([]Game, error) {
+	var ret []Game
+
+	for _, app := range apps {
+		details, err := GetAppDetails(app.Appid)
+		if err != nil {
+			return nil, err
+		}
+
+		app.Price = details.PriceOverview.PriceFormatted
+		app.Image = details.HeaderImage
+		app.IsFree = details.IsFree
+
+		ret = append(ret, app)
+	}
+
+	return ret, nil
+}
+
 func GetAppDetails(appid int) (*gameDetails, error) {
 	body, err := request(fmt.Sprintf("%s%d", app_details, appid))
 	if err != nil {
@@ -131,6 +154,35 @@ func GetAppDetails(appid int) (*gameDetails, error) {
 	}
 
 	return &details, nil
+}
+
+func GetAllAppsByName(key, tableName string, db *dynamodb.DynamoDB) ([]Game, error) {
+	input := &dynamodb.ScanInput{
+		TableName:        aws.String(tableName),
+		FilterExpression: aws.String("contains(#name, :name)"),
+		ExpressionAttributeNames: map[string]*string{
+			"#name": aws.String("name"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":name": {
+				S: aws.String(key),
+			},
+		},
+	}
+
+	result, err := db.Scan(input)
+	if err != nil {
+		return nil, fmt.Errorf("could not get apps by [%s] : [%s]", key, err.Error())
+	}
+
+	games := new([]Game)
+
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &games)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal list of games: [%s]", err.Error())
+	}
+
+	return *games, nil
 }
 
 func request(url string) ([]byte, error) {

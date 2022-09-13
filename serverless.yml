@@ -24,6 +24,12 @@ plugins:
   - serverless-dynamodb-seed
 
 custom:
+  seed:
+    apps:
+      table: apps-${opt:stage, sls:stage}
+      sources: 
+        - ./seed/apps.json
+
   dynamodb:
     stages:
       - dev
@@ -31,6 +37,12 @@ custom:
       port: 8001
       inMemory: true
       migrate: true
+      seed: true
+    seed:
+      apps:
+        sources:
+          - table: apps-${opt:stage, sls:stage}
+            sources: [./seed/apps.json]
 
 package:
   exclude:
@@ -48,15 +60,15 @@ functions:
 
 resources:
   Resources:
-    UsersCRUDDynamoTable:
+    SteamAppsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: 'apps-${opt:stage, sls:stage}'
         AttributeDefinitions:
-          - AttributeName: email
-            AttributeType: S
+          - AttributeName: appid
+            AttributeType: N
         KeySchema:
-          - AttributeName: email
+          - AttributeName: appid
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
