@@ -78,6 +78,39 @@ func (h *Handler) GetAppDetails() (Response, error) {
 	})
 }
 
+func (h *Handler) GetAppDetailsOnTheFly() (Response, error) {
+	// Get the path parameter that was sent
+	query := h.req.QueryStringParameters["query"]
+
+	if query == "" {
+		return JSONResponse(http.StatusBadGateway, Json{"message": "you must supply 'query' parameter"})
+	}
+
+	if len(query) <= MINIMUM_QUERY_CHARS {
+		return JSONResponse(http.StatusNotFound, Json{"message": "query must be more than 2 characters"})
+	}
+
+	apps, err := app.GetAllGames()
+	if err != nil {
+		return JSONResponse(http.StatusBadGateway, Json{"message": fmt.Sprintf("error getting apps with this query: [%s]", query)})
+	}
+
+	apps = app.Format(apps)
+	found, err := app.LookFor(query, apps)
+	if err != nil {
+		return JSONResponse(http.StatusBadGateway, Json{"message": fmt.Sprintf("error filtering apps with this query: [%s]", query)})
+	}
+
+	if len(found) == 0 {
+		return JSONResponse(http.StatusOK, Json{"message": fmt.Sprintf("no games were found using this query: [%s]", query)})
+	}
+
+	return JSONResponse(http.StatusOK, Json{
+		"total": len(found),
+		"apps":  found,
+	})
+}
+
 func getDynamoClient() (*dynamodb.DynamoDB, error) {
 	var config *aws.Config
 	region := os.Getenv("AWS_REGION")

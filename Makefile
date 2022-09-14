@@ -7,7 +7,13 @@ build-functions:
 	export GO111MODULE=on
 	cd ./functions/get/ && env CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o ../../bin/get get.go && cd ../..
 
+build-nt-functions:
+	export GO111MODULE=on
+	cd ./nt-functions/ && env CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o ../../bin/get get.go && cd ../..
+
 build: build-frontend build-functions
+
+build-nt: build-frontend build-nt-functions
 
 clean:
 	rm -rf ./bin ./vendor go.sum
