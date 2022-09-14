@@ -6,6 +6,7 @@ provider:
   region: eu-central-1
   environment:
     TABLE_NAME: apps-${opt:stage, sls:stage}
+    NEXT_PUBLIC_API: http://localhost:3000/dev/apps
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -22,8 +23,26 @@ plugins:
   - serverless-offline
   - serverless-dynamodb-local
   - serverless-dynamodb-seed
+  - serverless-s3-local
+  - serverless-s3-sync
 
 custom:
+  s3:
+    host: 0.0.0.0
+    directory: /tmp/s3-steam-apps
+    buckets: apps-${opt:stage, sls:stage}
+
+  s3Sync:
+    endpoint: http://localhost:4569
+    buckets:
+    - bucketName: _next
+      localDir: ./frontend/out/_next
+      acl: public-read
+    - bucketName: apps-${opt:stage, sls:stage}
+      localDir: ./frontend/out
+      acl: public-read
+      defaultContentType: text/html
+
   seed:
     apps:
       table: apps-${opt:stage, sls:stage}
@@ -73,3 +92,28 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    StaticSiteS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        BucketName: apps-${opt:stage, sls:stage}
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: 404.html
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+              - s3:GetObject
+              Resource:
+                Fn::Join: [
+                  "", [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "apps-${opt:stage, sls:stage}"
+                    },
+                    "/*"
+                  ]
+                ]

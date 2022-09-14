@@ -1,14 +1,18 @@
 {
   "scripts": {
-    "dev": "yarn seed && sls offline start",
+    "dev": "yarn seed && yarn build:frontend:dev && IS_OFFLINE=true sls offline start --aws-profile local",
+    "build:frontend:dev": "NEXT_PUBLIC_API=http://localhost:3000/dev/apps make build-frontend",
     "watch": "nodemon --watch ./ -e go,js --exec make build-functions",
-    "deploy": "sls deploy -c serverless.prod.yml --verbose",
+    "deploy:aws": "sls deploy -c serverless.prod.yml --verbose",
+    "deploy:netlify": "ntl deploy --prod",
     "destroy": "sls remove -c serverless.prod.yml --verbose",
     "seed": "rm -f ./seed/*.json && go run ./scripts/generate-seed-data.go"
   },
   "devDependencies": {
     "serverless-dynamodb-local": "^0.2.40",
     "serverless-dynamodb-seed": "^0.3.0",
-    "serverless-offline": "^10.0.2"
+    "serverless-offline": "^10.0.2",
+    "serverless-s3-local": "^0.6.22",
+    "serverless-s3-sync": "^3.0.0"
   }
 }
