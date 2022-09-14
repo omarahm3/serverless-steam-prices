@@ -27,9 +27,9 @@ type ErrorBody struct {
 }
 
 type Handler struct {
-	req       Request
-	tableName string
-	client    *dynamodb.DynamoDB
+	Req       Request
+	TableName string
+	Client    *dynamodb.DynamoDB
 }
 
 func Prepare(req Request) (*Handler, error) {
@@ -48,7 +48,7 @@ func Prepare(req Request) (*Handler, error) {
 
 func (h *Handler) GetAppDetails() (Response, error) {
 	// Get the path parameter that was sent
-	query := h.req.QueryStringParameters["query"]
+	query := h.Req.QueryStringParameters["query"]
 
 	if query == "" {
 		return JSONResponse(http.StatusBadGateway, Json{"message": "you must supply 'query' parameter"})
@@ -58,7 +58,7 @@ func (h *Handler) GetAppDetails() (Response, error) {
 		return JSONResponse(http.StatusNotFound, Json{"message": "query must be more than 2 characters"})
 	}
 
-	apps, err := app.GetAllAppsByName(query, h.tableName, h.client)
+	apps, err := app.GetAllAppsByName(query, h.TableName, h.Client)
 	if err != nil {
 		return JSONResponse(http.StatusBadGateway, Json{"message": fmt.Sprintf("error getting apps with this query: [%s]", query)})
 	}
@@ -80,7 +80,7 @@ func (h *Handler) GetAppDetails() (Response, error) {
 
 func (h *Handler) GetAppDetailsOnTheFly() (Response, error) {
 	// Get the path parameter that was sent
-	query := h.req.QueryStringParameters["query"]
+	query := h.Req.QueryStringParameters["query"]
 
 	if query == "" {
 		return JSONResponse(http.StatusBadGateway, Json{"message": "you must supply 'query' parameter"})
@@ -136,8 +136,8 @@ func getDynamoClient() (*dynamodb.DynamoDB, error) {
 
 func newHandler(req Request, tableName string, dynamoClient *dynamodb.DynamoDB) *Handler {
 	return &Handler{
-		req:       req,
-		tableName: tableName,
-		client:    dynamoClient,
+		Req:       req,
+		TableName: tableName,
+		Client:    dynamoClient,
 	}
 }

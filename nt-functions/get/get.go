@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -15,9 +14,8 @@ type (
 )
 
 func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	handler, err := handlers.Prepare(req)
-	if err != nil {
-		return handlers.JSONResponse(http.StatusInternalServerError, err.Error())
+	handler := &handlers.Handler{
+		Req: req,
 	}
 
 	return handler.GetAppDetailsOnTheFly()
