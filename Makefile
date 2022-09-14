@@ -9,7 +9,7 @@ build-functions:
 
 build-nt-functions:
 	export GO111MODULE=on
-	cd ./nt-functions/ && env CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o ../../bin/get get.go && cd ../..
+	cd ./nt-functions/get/ && env CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o ../../bin/get get.go && cd ../..
 
 build: build-frontend build-functions
 
