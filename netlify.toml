@@ -1,10 +1,10 @@
 [functions]
-  directory="functions"
+  directory="nt-functions"
 
 [build]
-  command="make build"
+  command="make build-nt"
   publish="./frontend/.next"
-  functions="nt-functions"
+  functions="functions"
 
 [build.environment]
   GO_VERSION="1.19"
